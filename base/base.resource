@@ -26,7 +26,7 @@ Setup Chrome
     Call Method    ${chrome_options}    add_argument    --no-sandbox
     Call Method    ${chrome_options}    add_argument    --disable-dev-shm-usage
     Call Method    ${chrome_options}    add_argument    --start-maximized
-    Call Method    ${chrome_options}    add_argument    --headless
+    #Call Method    ${chrome_options}    add_argument    --headless
     Call Method    ${chrome_options}    add_argument    --disable-gpu
     Open Browser    about:blank    ${BROWSER}    options=${chrome_options}
 
