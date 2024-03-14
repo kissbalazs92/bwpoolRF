@@ -2,46 +2,40 @@
 Resource    ../base/base.resource
 
 *** Variables ***
-${first_row_locator}    //tr[@aria-rowindex='1']
+${EMPTY_TD_TEXT}=    ${SPACE}
 
 *** Keywords ***
-Customer Should Appear In Grid
-    [Arguments]    ${name}    ${email}    ${phone}    ${comment}    ${location}
-    Wait Until Element Is Visible    ${first_row_locator}//td[text() = '${name}']
-    ${actual_name}       Get Text    ${first_row_locator}//td[2]
-    ${actual_email}      Get Text    ${first_row_locator}//td[3]
-    ${actual_phone}      Get Text    ${first_row_locator}//td[4]
-    Log To Console       actual phone: '${actual_phone}'
-    Log To Console       emptyyyyyyyy: '${empty}'
-    Log To Console       spaceeeeeeee: '${space}'
-    ${actual_comment}    Get Text    ${first_row_locator}//td[5]
-    ${actual_location}   Get Text    ${first_row_locator}//td[6]
-    Should Be Equal As Strings    ${actual_name}        ${name}
-    Should Be Equal As Strings    ${actual_email}       ${email}
-    Should Be Equal As Strings    ${actual_phone}       ${phone}
-    Should Be Equal As Strings    ${actual_comment}     ${comment}
-    Should Be Equal As Strings    ${actual_location}    ${location}
+Request Test Data From API
+    [Arguments]    ${URI}
+    Create Session    jsonplaceholder    https://random-data-api.com
+    ${response}=    GET On Session    jsonplaceholder    ${URI}
+    ${body}    Set Variable    ${response.json()}
+    RETURN    ${body}
 
-Location Should Appear In Grid
-    [Arguments]    ${name}    ${city}    ${zip}    ${street}    ${house_number}
-    Wait Until Element Is Visible    ${first_row_locator}//td[text() = '${name}']
-    ${actual_name}            Get Text    ${first_row_locator}//td[2]
-    ${actual_city}            Get Text    ${first_row_locator}//td[3]
-    ${actual_zip}             Get Text    ${first_row_locator}//td[4]
-    ${actual_street}          Get Text    ${first_row_locator}//td[5]
-    ${actual_house_number}    Get Text    ${first_row_locator}//td[6]
-    Should Be Equal As Strings    ${actual_name}          ${name}
-    Should Be Equal As Strings    ${actual_city}          ${city}
-    Should Be Equal As Strings    ${actual_zip}           ${zip}
-    Should Be Equal As Strings    ${actual_street}        ${street}
-    Should Be Equal As Strings    ${actual_house_number}  ${house_number}
+Wait And Click
+    [Arguments]    ${locator}
+    Wait Until Element Is Visible    ${locator}
+    Click Element    ${locator}
 
-Row Count Should Be
-    [Arguments]    ${expected_count}
-    ${expected_count}    Convert To Integer    ${expected_count}
-    ${actual_count}    Get Grid Rows Count
-    Should Be Equal    ${actual_count}    ${expected_count}
+Wait And Input
+    [Arguments]    ${locator}    ${text}    ${timeout}=15
+    Wait Until Element Is Visible    ${locator}    ${timeout}
+    Input Text    ${locator}    ${text}
 
-Location Info Page Should Open
-    ${actual_url}    Get Location
-    Should Contain    ${actual_url}   LocationInfo
+Wait Until Element Count
+    [Arguments]    ${locator}    ${expected_count}    ${timeout}=10    ${error_message}=Element count did not reach expected value within timeout
+    ${start_time}    Set Variable    0
+    ${elapsed}    Set Variable    0
+    FOR    ${index}    IN RANGE    1    ${timeout}
+        ${elements}=    Get WebElements    ${locator}
+        ${count}=    Get Length    ${elements}
+        Exit For Loop If    '${count}' == '${expected_count}'
+        Run Keyword If    '${elapsed}' > '${timeout}'    Fail    ${error_message}
+        Sleep    1
+        ${elapsed}    Set Variable    ${elapsed} + 1   
+        ${elements}=    Get WebElements    ${locator} 
+        ${count}=    Get Length    ${elements}
+        Exit For Loop If    '${count}' == '${expected_count}'
+    END
+    ${final_count}=    Get Length    ${elements}
+    Should Be Equal As Numbers    ${final_count}    ${expected_count}    ${error_message}
